@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Buat Short URL{% endblock %}
+{% block title %}Create Short URL{% endblock %}
 
 {% block content %}
 <div class="columns">
     <div class="column is-half">
         <div class="box">
-            <h2 class="subtitle">1. Tempel URL panjang</h2>
+            <h2 class="subtitle">1. Paste your long URL</h2>
             <form method="post" novalidate>
                 {% csrf_token %}
                 {% if form.non_field_errors %}
@@ -46,7 +46,7 @@
                 <div class="field">
                     <div class="control">
                         <button class="button is-primary is-fullwidth" type="submit">
-                            Buat URL Pendek
+                            Generate Short URL
                         </button>
                     </div>
                 </div>
@@ -55,32 +55,32 @@
 
         {% if created_link %}
             <div class="box">
-                <h2 class="subtitle">2. Salin URL pendek Anda</h2>
+                <h2 class="subtitle">2. Copy your short URL</h2>
                 <div class="field has-addons">
                     <div class="control is-expanded">
                         <input class="input" type="text" readonly value="{{ full_short_url }}">
                     </div>
                     <div class="control">
                         <a class="button is-link" href="{{ full_short_url }}" target="_blank" rel="noopener">
-                            Buka
+                            Open
                         </a>
                     </div>
                 </div>
-                <p class="help">URL asli: {{ created_link.original_url }}</p>
+                <p class="help">Original URL: {{ created_link.original_url }}</p>
             </div>
         {% endif %}
     </div>
 
     <div class="column is-half">
         <div class="box">
-            <h2 class="subtitle">Riwayat 10 URL terbaru</h2>
+            <h2 class="subtitle">Latest 10 short URLs</h2>
             {% if latest_links %}
                 <table class="table is-fullwidth is-striped is-hoverable">
                     <thead>
                         <tr>
-                            <th>Nama Pendek</th>
-                            <th>URL Asli</th>
-                            <th>Dikunjungi</th>
+                            <th>Short name</th>
+                            <th>Original URL</th>
+                            <th>Clicks</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -102,7 +102,7 @@
                     </tbody>
                 </table>
             {% else %}
-                <p class="has-text-grey">Belum ada data. Buat URL pendek pertama Anda!</p>
+                <p class="has-text-grey">No data yet. Create your first short URL!</p>
             {% endif %}
         </div>
     </div>

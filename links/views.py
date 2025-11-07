@@ -17,11 +17,11 @@ def home(request: HttpRequest) -> HttpResponse:
             created_link = form.save()
             messages.success(
                 request,
-                "URL pendek berhasil dibuat! Salin tautan di bawah untuk dibagikan.",
+                "Short URL created successfully! Copy the link below to share it.",
             )
             form = ShortLinkForm()
         else:
-            messages.error(request, "Ada kesalahan pada input. Silakan diperiksa lagi.")
+            messages.error(request, "Please review the form and fix the highlighted fields.")
 
     latest_links = ShortLink.objects.all()[:10]
     full_short_url = None

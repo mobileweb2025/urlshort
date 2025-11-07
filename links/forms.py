@@ -8,11 +8,11 @@ class ShortLinkForm(forms.ModelForm):
     custom_alias = forms.CharField(
         max_length=20,
         required=False,
-        help_text="Opsional: masukkan nama pendek sendiri (huruf, angka, tanda hubung).",
-        label="Nama pendek (opsional)",
+        help_text="Optional: provide your own short name (letters, numbers, hyphen).",
+        label="Custom short name (optional)",
         widget=forms.TextInput(
             attrs={
-                "placeholder": "contoh: promo-akhir-tahun",
+                "placeholder": "e.g. holiday-sale",
                 "class": "input",
             }
         ),
@@ -23,10 +23,10 @@ class ShortLinkForm(forms.ModelForm):
         fields = ("original_url", "custom_alias")
         widgets = {
             "original_url": forms.URLInput(
-                attrs={"placeholder": "Tempel URL panjang di sini", "class": "input"}
+                attrs={"placeholder": "Paste your long URL here", "class": "input"}
             ),
         }
-        labels = {"original_url": "URL asli"}
+        labels = {"original_url": "Original URL"}
 
     def clean_custom_alias(self) -> str:
         alias = self.cleaned_data.get("custom_alias", "").strip()
@@ -35,10 +35,10 @@ class ShortLinkForm(forms.ModelForm):
 
         normalized = slugify(alias)
         if len(normalized) < 3:
-            raise forms.ValidationError("Nama pendek minimal 3 karakter setelah dinormalisasi.")
+            raise forms.ValidationError("Custom name must be at least 3 characters after normalization.")
 
         if ShortLink.objects.filter(short_code__iexact=normalized).exists():
-            raise forms.ValidationError("Nama pendek sudah dipakai. Silakan coba nama lain.")
+            raise forms.ValidationError("This custom name is already taken. Please try another one.")
 
         return normalized
 
