@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Buat Short URL{% endblock %}
+
+{% block content %}
+<div class="columns">
+    <div class="column is-half">
+        <div class="box">
+            <h2 class="subtitle">1. Tempel URL panjang</h2>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="notification is-danger">
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="field">
+                    <label class="label">{{ form.original_url.label }}</label>
+                    <div class="control">
+                        {{ form.original_url }}
+                    </div>
+                    {% if form.original_url.help_text %}
+                        <p class="help">{{ form.original_url.help_text }}</p>
+                    {% endif %}
+                    {% for error in form.original_url.errors %}
+                        <p class="help is-danger">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="field">
+                    <label class="label">{{ form.custom_alias.label }}</label>
+                    <div class="control">
+                        {{ form.custom_alias }}
+                    </div>
+                    {% if form.custom_alias.help_text %}
+                        <p class="help">{{ form.custom_alias.help_text }}</p>
+                    {% endif %}
+                    {% for error in form.custom_alias.errors %}
+                        <p class="help is-danger">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="field">
+                    <div class="control">
+                        <button class="button is-primary is-fullwidth" type="submit">
+                            Buat URL Pendek
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {% if created_link %}
+            <div class="box">
+                <h2 class="subtitle">2. Salin URL pendek Anda</h2>
+                <div class="field has-addons">
+                    <div class="control is-expanded">
+                        <input class="input" type="text" readonly value="{{ full_short_url }}">
+                    </div>
+                    <div class="control">
+                        <a class="button is-link" href="{{ full_short_url }}" target="_blank" rel="noopener">
+                            Buka
+                        </a>
+                    </div>
+                </div>
+                <p class="help">URL asli: {{ created_link.original_url }}</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="column is-half">
+        <div class="box">
+            <h2 class="subtitle">Riwayat 10 URL terbaru</h2>
+            {% if latest_links %}
+                <table class="table is-fullwidth is-striped is-hoverable">
+                    <thead>
+                        <tr>
+                            <th>Nama Pendek</th>
+                            <th>URL Asli</th>
+                            <th>Dikunjungi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in latest_links %}
+                            <tr>
+                                <td>
+                                    <a href="{{ item.get_absolute_url }}">
+                                        {{ base_short_url }}/{{ item.short_code }}
+                                    </a>
+                                </td>
+                                <td class="is-size-7">
+                                    <a href="{{ item.original_url }}" target="_blank" rel="noopener">
+                                        {{ item.original_url|truncatechars:60 }}
+                                    </a>
+                                </td>
+                                <td>{{ item.click_count }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="has-text-grey">Belum ada data. Buat URL pendek pertama Anda!</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

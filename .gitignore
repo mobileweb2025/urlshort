@@ -1,0 +1,22 @@
+# OS junk
+.DS_Store
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Local databases
+db.sqlite3
+
+# Django stuff
+*.log
+staticfiles/
+media/
+
