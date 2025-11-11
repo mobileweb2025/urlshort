@@ -145,5 +145,9 @@ JAZZMIN_SETTINGS = {
     "welcome_sign": "Welcome to ShortURL Admin",
     "copyright": "Mobile Web Development - Ismail Khalil",
     "login_logo": "img/logo.png",
-    "custom_css": "css/admin.css",
+    "custom_css": "admin.css",
 }
+
+VAPID_PUBLIC_KEY = "BGoaxCvXVo-t-dih-RF7PUE87CtaWO94eYzJW7mCU7oYIoegWkSVDxXCjRpCh_yxhEe2AAU-1cAE9BQXerXREBU"
+VAPID_PRIVATE_KEY = "RgVxJUwOA5wyr1AChQGUULkBhkKoj9vsswWKdky246I"
+VAPID_CLAIMS = {"sub": "mailto:you@example.com"}

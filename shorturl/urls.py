@@ -16,8 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import TemplateView
+
+from links.views import OfflineView, save_subscription
 
 urlpatterns = [
+    path('sw.js', TemplateView.as_view(template_name="sw.js", content_type="application/javascript"), name='service-worker'),
+    path('offline/', OfflineView.as_view(), name='offline'),
+    path('api/subscriptions/', save_subscription, name='save_subscription'),
     path('admin/', admin.site.urls),
     path('', include('links.urls')),
 ]

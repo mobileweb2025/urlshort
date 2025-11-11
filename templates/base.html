@@ -40,6 +40,18 @@
             padding: 4rem 0 3rem;
         }
 
+        @media (min-width: 1024px) {
+            .shell {
+                width: 820px;
+            }
+        }
+
+        @media (min-width: 1280px) {
+            .shell {
+                width: 920px;
+            }
+        }
+
         .hero {
             text-align: left;
             margin-bottom: 2rem;
@@ -253,6 +265,12 @@
             <p class="badge">{% block header %}Short URL Generator{% endblock %}</p>
             <h1>Shorten any long link in seconds.</h1>
             <p>Create on-brand short links with custom aliases. Share instantly and update the alias anytime before you publish it.</p>
+            <button id="install-app-btn" style="margin-top:1rem;display:none;border:none;border-radius:999px;padding:0.75rem 1.5rem;font-weight:600;background:rgba(248,250,252,0.15);color:#f8fafc;cursor:pointer;">
+                Install app
+            </button>
+            <button id="enable-push-btn" style="margin-top:0.75rem;display:none;border:none;border-radius:999px;padding:0.75rem 1.5rem;font-weight:600;background:#f8fafc;color:#0f172a;cursor:pointer;">
+                Enable notifications
+            </button>
         </div>
 
         {% if messages %}
@@ -273,11 +291,97 @@
     </div>
 
     <script>
+        const vapidPublicKey = "{{ vapid_public_key|default:'' }}";
+        const enablePushBtn = document.getElementById("enable-push-btn");
+
+        function getCookie(name) {
+            if (!document.cookie) return null;
+            const csrfCookie = document.cookie.split(";").map(c => c.trim()).find(c => c.startsWith(name + "="));
+            return csrfCookie ? decodeURIComponent(csrfCookie.split("=")[1]) : null;
+        }
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+            const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
         if ("serviceWorker" in navigator) {
             window.addEventListener("load", () => {
-                navigator.serviceWorker.register("{% static 'sw.js' %}").catch((error) => {
+                navigator.serviceWorker.register("/sw.js").catch((error) => {
                     console.error("Service worker registration failed:", error);
                 });
+            });
+        }
+
+        async function subscribeForPush() {
+            if (!("serviceWorker" in navigator) || !vapidPublicKey) return;
+            const registration = await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+            });
+
+            const response = await fetch("/api/subscriptions/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken") || "",
+                },
+                body: JSON.stringify(subscription),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to save subscription");
+            }
+        }
+
+        let deferredPrompt;
+        window.addEventListener("beforeinstallprompt", (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installButton = document.getElementById("install-app-btn");
+            if (installButton) {
+                installButton.style.display = "inline-flex";
+                installButton.addEventListener("click", async () => {
+                    installButton.disabled = true;
+                    installButton.textContent = "Installing...";
+                    await deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === "accepted") {
+                        installButton.textContent = "Installed";
+                    } else {
+                        installButton.textContent = "Install app";
+                        installButton.disabled = false;
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        });
+
+        if (enablePushBtn && vapidPublicKey && "serviceWorker" in navigator && "Notification" in window) {
+            enablePushBtn.style.display = "inline-flex";
+            enablePushBtn.addEventListener("click", async () => {
+                try {
+                    const permission = await Notification.requestPermission();
+                    if (permission !== "granted") {
+                        enablePushBtn.textContent = "Permission denied";
+                        enablePushBtn.disabled = true;
+                        return;
+                    }
+                    enablePushBtn.textContent = "Enabling...";
+                    await subscribeForPush();
+                    enablePushBtn.textContent = "Notifications enabled";
+                    enablePushBtn.disabled = true;
+                } catch (error) {
+                    console.error(error);
+                    enablePushBtn.textContent = "Try again";
+                }
             });
         }
     </script>

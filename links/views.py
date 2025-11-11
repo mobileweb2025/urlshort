@@ -1,11 +1,21 @@
+import json
+
+from django.conf import settings
 from django.contrib import messages
 from django.db.models import F
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.views.generic import TemplateView
 
 from .forms import AliasUpdateForm, ShortLinkForm
-from .models import ShortLink
+from .models import PushSubscription, ShortLink
+
+
+class OfflineView(TemplateView):
+    template_name = "offline.html"
 
 
 def home(request: HttpRequest) -> HttpResponse:
@@ -86,6 +96,7 @@ def home(request: HttpRequest) -> HttpResponse:
         "created_link": created_link,
         "full_short_url": full_short_url,
         "alias_form": alias_form,
+        "vapid_public_key": getattr(settings, "VAPID_PUBLIC_KEY", ""),
     }
     return render(request, "links/home.html", context)
 
@@ -94,3 +105,23 @@ def redirect_short_link(request: HttpRequest, short_code: str) -> HttpResponse:
     short_link = get_object_or_404(ShortLink, short_code__iexact=short_code)
     ShortLink.objects.filter(pk=short_link.pk).update(click_count=F("click_count") + 1)
     return redirect(short_link.original_url)
+
+
+@csrf_exempt
+@require_POST
+def save_subscription(request: HttpRequest) -> JsonResponse:
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+        endpoint = data.get("endpoint")
+        keys = data.get("keys", {})
+        p256dh = keys.get("p256dh")
+        auth = keys.get("auth")
+        if not endpoint or not p256dh or not auth:
+            return JsonResponse({"error": "Invalid subscription"}, status=400)
+
+        subscription, _ = PushSubscription.objects.update_or_create(
+            endpoint=endpoint, defaults={"p256dh": p256dh, "auth": auth}
+        )
+        return JsonResponse({"status": "ok", "id": subscription.pk})
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)

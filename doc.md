@@ -24,8 +24,14 @@ shorturl/                # Project root (git repo)
 │   ├── asgi.py / wsgi.py   # Entry points for ASGI/WSGI servers
 │   └── __init__.py      # Marks the package
 ├── templates/           # HTML templates for rendering pages
-│   ├── base.html        # Shared layout + Bulma + message block
-│   └── links/home.html  # Main UI for creating/copying short URLs
+│   ├── base.html        # Shared layout + custom hero/styles + PWA scripts
+│   ├── links/home.html  # Main UI for creating/copying short URLs
+│   └── offline.html     # Standalone offline fallback page (PWA)
+├── static/              # PWA assets (icons, manifest, service worker)
+│   ├── icons/
+│   ├── img/
+│   ├── manifest.json
+│   └── sw.js
 └── db.sqlite3           # Legacy SQLite DB (unused when MySQL is active)
 ```
 
@@ -76,13 +82,11 @@ shorturl/                # Project root (git repo)
 ## 3. Frontend Rendering
 
 1. **Base Layout**
-   - `templates/base.html` loads Bulma CSS, renders the main title, and displays flash messages from Django’s message framework.
+   - `templates/base.html` loads the Inter font, custom CSS, PWA scripts, the install button, and the “Enable notifications” button. It also displays flash messages from Django’s message framework.
 
 2. **Home Page (`templates/links/home.html`)**
-   - Extends the base template and splits the page into two columns:
-     - **Left column**: shows the form (step 1) and, if a short link was just created, a “Copy your short URL” card (step 2).
-     - **Right column**: displays the latest 10 short links with columns for the short URL, original URL (truncated), and click count. Shows an empty state message if there is no data.
-   - Uses context variables provided by `home()` (`form`, `created_link`, `full_short_url`, `latest_links`, `base_short_url`).
+   - Extends the base template with a modern single-column card. It renders the form, result box (copy/open buttons), and alias editor. All styles are mobile-first and match the hero.
+   - Uses context variables provided by `home()` (`form`, `created_link`, `full_short_url`, `alias_form`, `vapid_public_key`).
 
 3. **Interaction Cycle**
    - User submits the form → browser POSTs to `/`.
@@ -112,4 +116,36 @@ shorturl/                # Project root (git repo)
    python3 manage.py runserver
    ```
 
-This sequence wires the backend (Django views + forms + ORM), frontend (templates + Bulma), and database (MySQL) into a simple yet complete short URL service. Use this doc as a reference whenever you need to explain or extend the system.
+This sequence wires the backend (Django views + forms + ORM), frontend (templates + custom CSS), and database (MySQL) into a complete short URL service. Use this doc as a reference whenever you need to explain or extend the system.
+
+## 5. Progressive Web App (PWA) & Push Notifications
+
+1. **Manifest & Icons**
+   - `static/manifest.json` registers the app name, start URL, colors, and icons (192px & 512px) generated in `static/icons/`.
+   - `<link rel="manifest">`, `<link rel="apple-touch-icon">`, and `<meta name="theme-color">` are set in `templates/base.html`.
+
+2. **Service Worker (`static/sw.js`)**
+   - Pre-caches `/`, `/offline/`, manifest, and icons.
+   - Provides cache-first strategy for static assets, network-first for pages, and serves `templates/offline.html` when requests fail offline.
+   - Handles `push` events to show notifications and `notificationclick` to open the relevant URL.
+
+3. **Install Prompt & Offline Page**
+   - Base template registers the service worker and listens for `beforeinstallprompt` to show the “Install app” button.
+   - `templates/offline.html` offers a friendly offline message with a retry button.
+
+4. **Push Subscription Pipeline**
+   - `links.models.PushSubscription` stores each browser’s endpoint/auth keys.
+   - `POST /api/subscriptions/` (`links.views.save_subscription`) records subscriptions (CSRF-protected when accessed via the main page).
+   - Frontend JS converts the VAPID public key to a `Uint8Array`, requests notification permission, subscribes via `PushManager`, and posts the subscription to the backend.
+   - VAPID keys live in `shorturl/settings.py` (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_CLAIMS`). **Regenerate** them for production.
+
+5. **Sending Test Notifications**
+   - Use `links.utils.send_push_to_all({"title": "...", "body": "...", "url": "/path"})` from Django shell to broadcast a notification to every stored subscription.
+   - For development, push notifications work on `http://localhost:8000`; to test on mobile you must expose the app over HTTPS (e.g., via ngrok).
+
+6. **Testing Checklist**
+   - Install PWA on Chrome/Edge desktop or Android via the “Install app” button, or using Safari’s “Add to Home Screen.”
+   - Simulate offline in DevTools → Network → Offline, reload, and confirm `offline.html` renders.
+   - Click “Enable notifications,” allow the permission prompt, then send a test payload from `send_push_to_all` to verify desktop notifications.
+
+These additions emphasize the “Mobile Web Development” aspect by demonstrating installable, offline-capable behavior plus push notifications powered by Python (Django) and JavaScript.

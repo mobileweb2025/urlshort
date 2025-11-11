@@ -29,3 +29,13 @@ class ShortLink(models.Model):
             candidate = "".join(secrets.choice(alphabet) for _ in range(length))
             if not ShortLink.objects.filter(short_code__iexact=candidate).exists():
                 return candidate
+
+
+class PushSubscription(models.Model):
+    endpoint = models.URLField(unique=True)
+    p256dh = models.CharField(max_length=255)
+    auth = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return self.endpoint
