@@ -1,11 +1,10 @@
-# ShortURL – Progressive Web Short-Link Generator (Django + PWA)
+# ShortURL – (Short-Link Generator with Django) 
+## Mobile Web Development with Python and JavaScript
+
 
 ShortURL is a Django + MySQL application for creating memorable short links with optional custom aliases. The project ships with a polished user experience, Jazzmin-powered admin dashboard, and full Progressive Web App (PWA) capabilities (installable, offline-ready, and push-notification enabled).
 
-![Frontend screenshot](docs/images/frontend.png "ShortURL form")  
-![Admin login screenshot](docs/images/admin-login.png "Jazzmin login")
-
-> This project was built for **Mobile Web Development with Python and JavaScript** course.
+> Built as an example project for Mobile Web Development with Python and JavaScript — Ismail Khalil.
 
 ---
 
@@ -46,7 +45,7 @@ ShortURL is a Django + MySQL application for creating memorable short links with
 
 1. **Clone & enter the repo**
    ```bash
-   git clone https://github.com/<your-user>/shorturl.git
+   git clone https://github.com/mobileweb2025/urlshort.git
    cd shorturl
    ```
 
@@ -146,35 +145,12 @@ shorturl/
   - View/search/edit short links and click counts.
   - Inspect push subscriptions to see who opted in.
   - Jazzmin customizations (`JAZZMIN_SETTINGS`) handle branding + responsive logo.
-- Screenshot:
-  ```
-  docs/images/admin-login.png
-  ```
-
----
-
-## 🧪 Troubleshooting
-
-| Issue                                   | Fix                                                                                   |
-|-----------------------------------------|----------------------------------------------------------------------------------------|
-| `ModuleNotFoundError: django`           | Ensure virtualenv is activated before running commands.                               |
-| MySQL `2003 (HY000)` connection error   | Start MySQL (`mysql.server start`) and confirm credentials in `settings.py`.          |
-| Notifications stuck on “Enabling…”      | Use `http://localhost:8000/` (secure context) and check DevTools → Console/Network.    |
-| Offline page not shown                  | Clear service worker cache (DevTools → Application → Clear storage → Unregister).     |
-| Push not reaching device                | Make sure browser tab is open and permission is granted; trigger via shell helper.    |
-
----
-
-## 📄 License
-
-Specify your license here (e.g., MIT). Replace this section with actual terms before publishing.
-
+    
 ---
 
 ## 🙌 Acknowledgements
 
 - Django + Jazzmin for rapid admin UI.
 - pywebpush + Chrome DevTools for PWA debugging.
-- Built as an example project for **Mobile Web Development with Python and JavaScript — Ismail Khalil**.
 
 Happy shortening! 🚀
