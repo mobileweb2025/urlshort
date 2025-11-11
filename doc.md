@@ -10,14 +10,16 @@ shorturl/                # Project root (git repo)
 ├── doc.md               # Documentation/architecture guide (this file)
 ├── .gitignore           # Ignore rules for git
 ├── links/               # Custom app that handles short URLs
-│   ├── admin.py         # Admin registration for ShortLink
+│   ├── admin.py         # Admin registration for ShortLink & PushSubscription
 │   ├── apps.py          # App configuration for Django
 │   ├── forms.py         # Form + validation for URL input
 │   ├── migrations/      # Auto-generated database migrations
-│   │   └── 0001_initial.py   # Creates the ShortLink table
-│   ├── models.py        # ShortLink model definition + helpers
+│   │   ├── 0001_initial.py   # Creates the ShortLink table
+│   │   └── 0002_pushsubscription.py  # Stores push subscription details
+│   ├── models.py        # ShortLink + PushSubscription models
 │   ├── urls.py          # App-level URL routes
-│   └── views.py         # Request handlers (home + redirect)
+│   ├── utils.py         # Helper functions (send_push_to_all)
+│   └── views.py         # Request handlers (home, redirect, offline, subscription API)
 ├── shorturl/            # Django project settings package
 │   ├── settings.py      # Global config (DB, installed apps, templates)
 │   ├── urls.py          # Root URL dispatcher
@@ -26,12 +28,13 @@ shorturl/                # Project root (git repo)
 ├── templates/           # HTML templates for rendering pages
 │   ├── base.html        # Shared layout + custom hero/styles + PWA scripts
 │   ├── links/home.html  # Main UI for creating/copying short URLs
-│   └── offline.html     # Standalone offline fallback page (PWA)
-├── static/              # PWA assets (icons, manifest, service worker)
+│   ├── offline.html     # Standalone offline fallback page (PWA)
+│   └── sw.js            # Service worker served via Django view
+├── static/              # PWA assets (icons, manifest, admin CSS)
 │   ├── icons/
 │   ├── img/
 │   ├── manifest.json
-│   └── sw.js
+│   └── admin.css
 └── db.sqlite3           # Legacy SQLite DB (unused when MySQL is active)
 ```
 
@@ -79,10 +82,10 @@ shorturl/                # Project root (git repo)
      - Django admin (`/admin/`) after running `python manage.py createsuperuser`.
      - MySQL clients (CLI or GUI such as MySQL Workbench / Sequel Ace) by connecting to `db_shorturl`.
 
-## 3. Frontend Rendering
+## 3. Frontend Rendering (User Experience)
 
 1. **Base Layout**
-   - `templates/base.html` loads the Inter font, custom CSS, PWA scripts, the install button, and the “Enable notifications” button. It also displays flash messages from Django’s message framework.
+   - `templates/base.html` loads the Inter font, custom CSS, PWA scripts, the install button, and the “Enable notifications” button. It also displays flash messages from Django’s message framework. Breakpoints ensure the card feels native on both mobile (full-width) and desktop (≈900px).
 
 2. **Home Page (`templates/links/home.html`)**
    - Extends the base template with a modern single-column card. It renders the form, result box (copy/open buttons), and alias editor. All styles are mobile-first and match the hero.
@@ -117,6 +120,29 @@ shorturl/                # Project root (git repo)
    ```
 
 This sequence wires the backend (Django views + forms + ORM), frontend (templates + custom CSS), and database (MySQL) into a complete short URL service. Use this doc as a reference whenever you need to explain or extend the system.
+
+## 4b. Admin Experience (Jazzmin)
+
+1. **Login Page**
+   - Uses Jazzmin theme with a responsive logo (`static/admin.css` ensures it scales on any viewport).
+   - Superuser accounts created via `python3 manage.py createsuperuser`.
+
+2. **Dashboard**
+   - Jazzmin sidebar exposes “Short links” and “Push subscriptions”.
+   - Built-in search/filter forms allow quick lookup by short code, original URL, or endpoint.
+
+3. **ShortLink Management**
+   - List view shows `short_code`, `original_url`, `click_count`, timestamps.
+   - Detail view lets admin edit target URL or alias, and delete entries.
+   - Admin can manually create short links for special campaigns.
+
+4. **PushSubscription Management**
+   - `links.models.PushSubscription` is registered so admin can inspect stored subscriptions (endpoint + keys).
+   - Useful to monitor how many devices opted in for push notifications.
+
+5. **Extensibility**
+   - Additional Jazzmin settings (logo, theme color, nav links) live in `JAZZMIN_SETTINGS`.
+   - Future enhancements can expose actions (e.g., reset click counts, trigger push) directly from admin.
 
 ## 5. Progressive Web App (PWA) & Push Notifications
 
