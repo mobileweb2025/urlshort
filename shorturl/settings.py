@@ -25,12 +25,13 @@ SECRET_KEY = 'django-insecure-k@6e429w3njgw4paj&yay2=xnnm-d$wj38bgiclct0jx_xxwcs
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "140.78.92.77"]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -128,8 +129,21 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+JAZZMIN_SETTINGS = {
+    "site_title": "ShortURL Admin",
+    "site_header": "ShortURL Dashboard",
+    "site_brand": "ShortURL Admin",
+    "welcome_sign": "Welcome to ShortURL Admin",
+    "copyright": "Mobile Web Development - Ismail Khalil",
+    "login_logo": "img/logo.png",
+    "custom_css": "css/admin.css",
+}

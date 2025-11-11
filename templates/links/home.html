@@ -3,108 +3,95 @@
 {% block title %}Create Short URL{% endblock %}
 
 {% block content %}
-<div class="columns">
-    <div class="column is-half">
-        <div class="box">
-            <h2 class="subtitle">1. Paste your long URL</h2>
-            <form method="post" novalidate>
-                {% csrf_token %}
-                {% if form.non_field_errors %}
-                    <div class="notification is-danger">
-                        {% for error in form.non_field_errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+<div class="card">
+    <h2>Shorten a long URL</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create">
 
-                <div class="field">
-                    <label class="label">{{ form.original_url.label }}</label>
-                    <div class="control">
-                        {{ form.original_url }}
-                    </div>
-                    {% if form.original_url.help_text %}
-                        <p class="help">{{ form.original_url.help_text }}</p>
-                    {% endif %}
-                    {% for error in form.original_url.errors %}
-                        <p class="help is-danger">{{ error }}</p>
-                    {% endfor %}
-                </div>
-
-                <div class="field">
-                    <label class="label">{{ form.custom_alias.label }}</label>
-                    <div class="control">
-                        {{ form.custom_alias }}
-                    </div>
-                    {% if form.custom_alias.help_text %}
-                        <p class="help">{{ form.custom_alias.help_text }}</p>
-                    {% endif %}
-                    {% for error in form.custom_alias.errors %}
-                        <p class="help is-danger">{{ error }}</p>
-                    {% endfor %}
-                </div>
-
-                <div class="field">
-                    <div class="control">
-                        <button class="button is-primary is-fullwidth" type="submit">
-                            Generate Short URL
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        {% if created_link %}
-            <div class="box">
-                <h2 class="subtitle">2. Copy your short URL</h2>
-                <div class="field has-addons">
-                    <div class="control is-expanded">
-                        <input class="input" type="text" readonly value="{{ full_short_url }}">
-                    </div>
-                    <div class="control">
-                        <a class="button is-link" href="{{ full_short_url }}" target="_blank" rel="noopener">
-                            Open
-                        </a>
-                    </div>
-                </div>
-                <p class="help">Original URL: {{ created_link.original_url }}</p>
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
             </div>
         {% endif %}
-    </div>
 
-    <div class="column is-half">
-        <div class="box">
-            <h2 class="subtitle">Latest 10 short URLs</h2>
-            {% if latest_links %}
-                <table class="table is-fullwidth is-striped is-hoverable">
-                    <thead>
-                        <tr>
-                            <th>Short name</th>
-                            <th>Original URL</th>
-                            <th>Clicks</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in latest_links %}
-                            <tr>
-                                <td>
-                                    <a href="{{ item.get_absolute_url }}">
-                                        {{ base_short_url }}/{{ item.short_code }}
-                                    </a>
-                                </td>
-                                <td class="is-size-7">
-                                    <a href="{{ item.original_url }}" target="_blank" rel="noopener">
-                                        {{ item.original_url|truncatechars:60 }}
-                                    </a>
-                                </td>
-                                <td>{{ item.click_count }}</td>
-                            </tr>
+        <div class="form-group">
+            <label class="form-label">{{ form.original_url.label }}</label>
+            {{ form.original_url }}
+            {% if form.original_url.help_text %}
+                <p class="help-text">{{ form.original_url.help_text }}</p>
+            {% endif %}
+            {% for error in form.original_url.errors %}
+                <p class="error-text">{{ error }}</p>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">{{ form.custom_alias.label }}</label>
+            {{ form.custom_alias }}
+            {% if form.custom_alias.help_text %}
+                <p class="help-text">{{ form.custom_alias.help_text }}</p>
+            {% endif %}
+            {% for error in form.custom_alias.errors %}
+                <p class="error-text">{{ error }}</p>
+            {% endfor %}
+        </div>
+
+        <button class="primary-btn" type="submit">Generate Short URL</button>
+    </form>
+
+    {% if created_link %}
+        <div class="result-card">
+            <p class="text-muted">Your short link</p>
+            <div class="result-url-box">
+                <input type="text" readonly id="short-url" value="{{ full_short_url }}">
+                <button class="ghost-btn" type="button" id="copy-btn">Copy</button>
+                <a class="ghost-btn" href="{{ full_short_url }}" target="_blank" rel="noopener" style="text-decoration:none; text-align:center;">Open</a>
+            </div>
+            <p class="help-text" style="margin-top:0.75rem;">Original URL: {{ created_link.original_url }}</p>
+
+            {% if alias_form %}
+                <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 1.5rem 0;">
+                <h3 style="margin:0 0 0.75rem;font-size:1rem;font-weight:600;">Need to adjust the alias?</h3>
+                <form method="post" class="alias-grid" novalidate>
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update">
+                    {{ alias_form.link_id }}
+                    <div class="form-group" style="margin-bottom:0;">
+                        {{ alias_form.new_alias }}
+                        {% if alias_form.new_alias.help_text %}
+                            <p class="help-text">{{ alias_form.new_alias.help_text }}</p>
+                        {% endif %}
+                        {% for error in alias_form.new_alias.errors %}
+                            <p class="error-text">{{ error }}</p>
                         {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p class="has-text-grey">No data yet. Create your first short URL!</p>
+                    </div>
+                    <div style="display:flex;">
+                        <button class="primary-btn" type="submit" style="width:100%;">Save new alias</button>
+                    </div>
+                </form>
             {% endif %}
         </div>
-    </div>
+    {% endif %}
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const copyBtn = document.getElementById("copy-btn");
+        const input = document.getElementById("short-url");
+        if (copyBtn && input) {
+            copyBtn.addEventListener("click", () => {
+                input.select();
+                input.setSelectionRange(0, 99999);
+                const copied = document.execCommand("copy");
+                if (copied) {
+                    copyBtn.innerText = "Copied!";
+                    setTimeout(() => (copyBtn.innerText = "Copy"), 2000);
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}
