@@ -5,8 +5,7 @@ ShortURL is a Django + MySQL application for creating memorable short links with
 ![Frontend screenshot](docs/images/frontend.png "ShortURL form")  
 ![Admin login screenshot](docs/images/admin-login.png "Jazzmin login")
 
-> Replace the image paths above with the actual location of your screenshots (e.g., `docs/images/...`).  
-> This project was built for **Mobile Web Development with Python and JavaScript** (Ismail Khalil).
+> This project was built for **Mobile Web Development with Python and JavaScript** course.
 
 ---
 
